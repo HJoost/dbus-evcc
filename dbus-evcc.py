@@ -127,13 +127,19 @@ class DbusEvccChargerService:
                 self._dbusservice['/Mode'] = 0
                 self._dbusservice['/StartStop'] = 1
 
+            # 0=Disconnected, 1=Connected, 2=Charging, 3=Charged
             status = 0
             if not loadpoint.get('connected', False):
                 status = 0
             elif loadpoint.get('charging', False):
                 status = 2
             else:
-                status = 1
+                vehicle_soc = loadpoint.get('vehicleSoc', 0)
+                limit_soc = loadpoint.get('vehicleLimitSoc', 100)
+                if vehicle_soc > 0 and vehicle_soc >= limit_soc:
+                    status = 3  # SOC-Limit erreicht → Charged
+                else:
+                    status = 1  # verbunden, aber nicht geladen
             self._dbusservice['/Status'] = status
 
             if status == 0:
