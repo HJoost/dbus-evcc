@@ -48,7 +48,12 @@ class DbusEvccChargerService:
         self._dbusservice.add_path('/HardwareVersion', 2)
         self._dbusservice.add_path('/Connected', 1)
         self._dbusservice.add_path('/UpdateIndex', 0)
-        self._dbusservice.add_path('/Position', 1)
+        # Position: 0 = AC Output, 1 = AC Input 1, 2 = AC Input 2
+        if config.has_section(section):
+            position = int(config[section].get('Position', config['DEFAULT'].get('Position', '1')))
+        else:
+            position = int(config['DEFAULT'].get('Position', '1'))
+        self._dbusservice.add_path('/Position', position)
 
         for path in ['/Status', '/Mode']:
             self._dbusservice.add_path(path, None)
