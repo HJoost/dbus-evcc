@@ -17,6 +17,16 @@ import dbus
 sys.path.insert(1, os.path.join(os.path.dirname(__file__), '/opt/victronenergy/dbus-systemcalc-py/ext/velib_python'))
 from vedbus import VeDbusService
 
+# Seconds to wait for EVCC, so a hanging request can't block the main loop
+REQUEST_TIMEOUT = 10
+
+
+def evcc_state_url(host):
+    # Host may include a scheme (e.g. https://evcc.example.com), defaults to http://
+    if '://' not in host:
+        host = 'http://' + host
+    return host.rstrip('/') + '/api/state'
+
 
 class DbusEvccChargerService:
     def __init__(self, servicename, paths, loadpoint_index, productname='EVCC-Charger', connection='EVCC REST API'):
@@ -78,12 +88,12 @@ class DbusEvccChargerService:
         config = self._getConfig()
         accessType = config['DEFAULT']['AccessType']
         if accessType == 'OnPremise':
-            return 'http://%s/api/state' % config['ONPREMISE']['Host']
+            return evcc_state_url(config['ONPREMISE']['Host'])
         raise ValueError('AccessType %s is not supported' % accessType)
 
     def _getEvccChargerData(self):
         URL = self._getEvccStatusUrl()
-        request_data = requests.get(url=URL)
+        request_data = requests.get(url=URL, timeout=REQUEST_TIMEOUT)
         if not request_data:
             raise ConnectionError('No response from EVCC - %s' % URL)
         json_data = request_data.json()
@@ -225,7 +235,7 @@ def main():
         config = configparser.ConfigParser()
         config.read('%s/config.ini' % os.path.dirname(os.path.realpath(__file__)))
         host = config['ONPREMISE']['Host']
-        data = requests.get('http://{}/api/state'.format(host)).json()
+        data = requests.get(evcc_state_url(host), timeout=REQUEST_TIMEOUT).json()
         lp_sections=sorted([s for s in config.sections() if s.upper().startswith('LOADPOINT')])
         api_count=len(data['loadpoints'])
         if lp_sections:
