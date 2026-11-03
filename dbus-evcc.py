@@ -20,6 +20,9 @@ from vedbus import VeDbusService
 # Seconds to wait for EVCC, so a hanging request can't block the main loop
 REQUEST_TIMEOUT = 10
 
+# Reuse the HTTP(S) connection to EVCC instead of a new handshake every poll
+session = requests.Session()
+
 
 def evcc_state_url(host):
     # Host may include a scheme (e.g. https://evcc.example.com), defaults to http://
@@ -93,7 +96,7 @@ class DbusEvccChargerService:
 
     def _getEvccChargerData(self):
         URL = self._getEvccStatusUrl()
-        request_data = requests.get(url=URL, timeout=REQUEST_TIMEOUT)
+        request_data = session.get(url=URL, timeout=REQUEST_TIMEOUT)
         if not request_data:
             raise ConnectionError('No response from EVCC - %s' % URL)
         json_data = request_data.json()
@@ -235,7 +238,7 @@ def main():
         config = configparser.ConfigParser()
         config.read('%s/config.ini' % os.path.dirname(os.path.realpath(__file__)))
         host = config['ONPREMISE']['Host']
-        data = requests.get(evcc_state_url(host), timeout=REQUEST_TIMEOUT).json()
+        data = session.get(evcc_state_url(host), timeout=REQUEST_TIMEOUT).json()
         lp_sections=sorted([s for s in config.sections() if s.upper().startswith('LOADPOINT')])
         api_count=len(data['loadpoints'])
         if lp_sections:
