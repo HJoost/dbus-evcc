@@ -63,7 +63,7 @@ If no `[LOADPOINT*]` sections are defined, the number of loadpoints is **auto-de
 | DEFAULT | AccessType | Fixed value `OnPremise` |
 | DEFAULT | SignOfLifeLog | Time in minutes how often a status is added to `current.log` with log-level INFO |
 | DEFAULT | Deviceinstance | Base DeviceInstance (used when no `[LOADPOINT*]` sections are defined) |
-| ONPREMISE | Host | IP or hostname (and port) of EVCC, e.g. `192.168.1.99:7070` |
+| ONPREMISE | Host | IP or hostname (and port) of EVCC, e.g. `192.168.1.99:7070`. Uses `http://` unless a scheme is given, e.g. `https://evcc.example.com` behind a reverse proxy |
 | LOADPOINT0..N | Deviceinstance | Unique ID identifying this charger in Venus OS |
 | LOADPOINT0..N | Name | Custom name shown in Venus OS / Victron Remote Console |
 
